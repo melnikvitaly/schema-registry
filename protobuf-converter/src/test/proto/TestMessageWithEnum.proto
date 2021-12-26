@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option java_package = "io.confluent.connect.protobuf.test";
+option java_outer_classname = "TestMessageWithEnumWrapper";
+
+import "google/protobuf/descriptor.proto";
+import "google/protobuf/wrappers.proto";
+
+message TestMessageWithEnum {
+    enum EnumType {
+        A = 0;
+        B= 1;
+        C = 2;
+    }    
+    EnumType enumField = 1;
+    string stringField = 2;
+    .google.protobuf.Int32Value nullableInt32Field = 3;
+}
+

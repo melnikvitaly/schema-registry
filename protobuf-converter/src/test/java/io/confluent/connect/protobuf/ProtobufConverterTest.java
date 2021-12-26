@@ -19,12 +19,11 @@ package io.confluent.connect.protobuf;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.protobuf.Descriptors.Descriptor;
-import com.google.protobuf.Descriptors.FieldDescriptor;
-import com.google.protobuf.Field;
+import com.google.protobuf.Int32Value;
 import com.google.protobuf.ListValue;
-import com.google.protobuf.NullValue;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.Value;
+import io.confluent.connect.protobuf.test.TestMessageWithEnumWrapper;
 import io.confluent.kafka.schemaregistry.client.rest.entities.SchemaReference;
 import io.confluent.kafka.schemaregistry.protobuf.ProtobufSchemaProvider;
 import io.confluent.kafka.serializers.protobuf.test.TestMessageProtos.TestMessage2;
@@ -37,6 +36,7 @@ import org.apache.kafka.connect.data.Struct;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -362,6 +362,26 @@ public class ProtobufConverterTest {
     );
 
     assertArrayEquals(expected, Arrays.copyOfRange(result, PROTOBUF_BYTES_START, result.length));
+  }
+
+  @Test
+  public void TestMessageWithEnum() throws Exception {
+    Map<String, String> myMap = new HashMap<String, String>() {{
+      put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, "localhost");
+      // put("wrapper.for.nullables", "true");
+    }};
+    converter.configure(myMap, true);
+
+    ProtobufSchema a =  getSchema(TestMessageWithEnumWrapper.TestMessageWithEnum.getDescriptor());
+    final byte[] input = concat(new byte[]{0, 0, 0, 0, 1, 0}, TestMessageWithEnumWrapper.TestMessageWithEnum
+            .newBuilder()
+            .setEnumField(TestMessageWithEnumWrapper.TestMessageWithEnum.EnumType.B)
+            .setStringField("text1")
+            .setNullableInt32Field(Int32Value.of(123))
+            .build()
+            .toByteArray());
+    schemaRegistry.register("my-topic-key", getSchema(TestMessageWithEnumWrapper.TestMessageWithEnum.getDescriptor()));
+    SchemaAndValue result = converter.toConnectData("my-topic", input);
   }
 
   @Test
